@@ -1,0 +1,8 @@
+{
+    "editor.fontSize": 16,
+    "debug.console.fontSize": 16,
+    "terminal.integrated.fontSize": 14,
+    "notebook.markup.fontSize": 0,
+    "notebook.output.fontSize": 0,
+    "markdown.preview.fontSize": 14
+}
