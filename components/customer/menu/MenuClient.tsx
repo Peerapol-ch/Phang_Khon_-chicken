@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import MenuNavbar from "@/components/customer/layout/MenuNavbar";
 import AddToCartModal from "../cart/AddToCartModal";
+import { useCart } from "@/context/CartContext"; // ✅ เพิ่ม import
 import { 
   Plus, 
   Minus, 
@@ -47,25 +48,20 @@ export default function MenuClient({
   categories,
   menuItems,
 }: Readonly<MenuClientProps>) {
+  // ✅ เพิ่ม useCart hook
+  const { addToCart } = useCart();
+  
   const [activeCategory, setActiveCategory] = useState<number>(
     categories[0]?.id || 0
   );
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // ✅ View Mode State
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  
-  // ✅ Quick Add State
   const [quickAddQuantities, setQuickAddQuantities] = useState<Record<number, number>>({});
-  
-  // ✅ Liked Items
   const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
-  
-  // ✅ Show Scroll to Top
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // ✅ Auto detect view mode based on screen size
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 768;
@@ -77,7 +73,6 @@ export default function MenuClient({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // ✅ Scroll to top button visibility
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 500);
@@ -107,7 +102,6 @@ export default function MenuClient({
     });
   };
 
-  // ✅ Quick Add Functions
   const handleQuickAdd = (e: React.MouseEvent, itemId: number) => {
     e.stopPropagation();
     setQuickAddQuantities(prev => ({ ...prev, [itemId]: 1 }));
@@ -133,11 +127,24 @@ export default function MenuClient({
     });
   };
 
+  // ✅ แก้ไขฟังก์ชันนี้ - เชื่อมต่อกับ Cart Context จริงๆ
   const handleAddToCart = (e: React.MouseEvent, item: MenuItem) => {
     e.stopPropagation();
     const qty = quickAddQuantities[item.id] || 1;
-    // TODO: Add to cart logic here
+    
+    // ✅ เรียกใช้ addToCart จาก Context
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: qty,
+      image: item.image_url,
+      note: "",
+    });
+    
     toast.success(`เพิ่ม ${item.name} x${qty} ลงตะกร้าแล้ว`, { icon: '🛒' });
+    
+    // ✅ Reset quantity หลังเพิ่มลงตะกร้า
     setQuickAddQuantities(prev => {
       const { [item.id]: _, ...rest } = prev;
       return rest;
@@ -148,7 +155,6 @@ export default function MenuClient({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Handle scroll spy
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -214,7 +220,7 @@ export default function MenuClient({
                 key={category.id}
                 id={`category-${category.id}`}
               >
-                {/* ✅ Category Header with View Toggle */}
+                {/* Category Header with View Toggle */}
                 <div className="flex items-center justify-between mb-4 md:mb-6">
                   <div className="flex items-center gap-2">
                     <div className="w-1 h-6 bg-gradient-to-b from-brand-yellow to-amber-600 rounded-full" />
@@ -226,7 +232,7 @@ export default function MenuClient({
                     </span>
                   </div>
                   
-                  {/* ✅ View Toggle */}
+                  {/* View Toggle */}
                   <div className="flex items-center bg-white/10 rounded-xl p-1 border border-white/10">
                     <button
                       onClick={() => setViewMode('grid')}
@@ -253,7 +259,7 @@ export default function MenuClient({
                   </div>
                 </div>
 
-                {/* ✅ Grid View */}
+                {/* Grid View */}
                 {viewMode === 'grid' && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                     {categoryItems.map((item) => {
@@ -339,7 +345,7 @@ export default function MenuClient({
                   </div>
                 )}
 
-                {/* ✅ List View */}
+                {/* List View */}
                 {viewMode === 'list' && (
                   <div className="flex flex-col gap-3">
                     {categoryItems.map((item) => {
@@ -445,10 +451,10 @@ export default function MenuClient({
                                       </button>
                                     </div>
 
-                                    {/* Confirm Button */}
+                                    {/* ✅ Confirm Button - เชื่อมต่อกับ Cart แล้ว */}
                                     <button
                                       onClick={(e) => handleAddToCart(e, item)}
-                                      className="h-8 px-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-sm rounded-xl flex items-center gap-1 shadow-lg active:scale-95"
+                                      className="h-8 px-3 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-sm rounded-xl flex items-center gap-1 shadow-lg shadow-emerald-500/30 active:scale-95 transition-all"
                                     >
                                       <ShoppingCart className="w-4 h-4" />
                                     </button>
@@ -476,7 +482,7 @@ export default function MenuClient({
         </main>
       </div>
 
-      {/* ✅ Scroll to Top Button */}
+      {/* Scroll to Top Button */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}
